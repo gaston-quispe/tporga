@@ -5,7 +5,9 @@ write your code in this window. */
 #include <stdio.h>
 
 int main() {
-    printf("Hello, World!");
-    return 0;
+	printf("Usage:");
+	printf("\ttp0 -h");
+
+return 0;
 }
     

@@ -1,6 +1,118 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+
+int caracter_valido(char caracter)
+{
+	char letra = tolower(caracter);
+	if((letra > 96 && letra < 123) || (letra > 47 && letra < 58) || letra == 45 || letra == 95)
+	{
+		return 1;
+	}
+	return 0;
+}
+
+int es_capicua(char* palabra)
+{
+	int i = 0, longitud;
+	longitud = strlen(palabra);
+	
+	if(longitud != 0)
+	{
+
+		for(i=0; i < longitud/2; i++)
+		{
+			int aux = longitud - i -1;
+			/*char a = palabra[i];
+			char b =palabra[aux];
+			printf("%s \n",palabra);
+			printf("%c",a);
+			printf("%c \n",b);	
+			if(tolower(palabra[i]) != tolower(palabra[longitud-i]))*/
+			if(palabra[i] != palabra[aux])
+			{
+				return 0;
+			}
+		}
+		return 1;	
+
+	}
+	return 0;
+}
+
+/*Procesa un text y reemplaza los caracteres no contemplados por espacios*/
+char* quitar_caracteres_invalidos(char* texto)
+{
+return texto;
+	/*int i;
+	char* texto_formateado = NULL;
+	for(i=0;i < strlen(texto); i++)
+	{
+		if(caracter_valido(texto[i]))
+		{
+		    size_t len = strlen(texto_formateado);
+		    char *texto_formateado2 = malloc(len + 1 + 1 );
+		    strcpy(texto_formateado2, texto_formateado);
+		    texto_formateado2[len] = texto[i];
+		    texto_formateado2[len + 1] = '\0';
+		    texto_formateado = texto_formateado2;
+		}
+		    size_t len = strlen(texto_formateado);
+		    char *texto_formateado2 = malloc(len + 1 + 1 );
+		    strcpy(texto_formateado2, texto_formateado);
+		    texto_formateado2[len] = " ";
+		    texto_formateado2[len + 1] = '\0';
+		    texto_formateado = texto_formateado2;
+		
+	}
+	return texto_formateado;*/
+}
+
+int escribir_archivo(FILE* output_file, char* palabra)
+{
+	fprintf(output_file, palabra);
+	fprintf(output_file," ");
+}
+
+
+/*que era lo que hacia esto??? */
+char* procesar_archivo(char* input_path, char* output_path)
+{	/*Abre el archivo que se va a leer con las palabras capicuas*/
+	FILE* archivo = fopen(input_path, "r");
+	/*Abre el archivo sobre el que se va a escribir la salida */
+	FILE* archivoSalida = fopen(output_path, "w");
+	
+	
+		char str[999];
+		
+		if (archivo) 
+		{
+			char* linea_nueva;
+			
+			while (fgets(str, 999, archivo))
+			{        	
+
+				linea_nueva = quitar_caracteres_invalidos(str);
+				
+				char* palabra = strtok(linea_nueva, " ");
+				while(palabra)
+				{
+				
+					if(es_capicua(palabra))
+					{
+						/*escribir_archivo(archivo, palabra);	*/
+						fprintf(archivoSalida, palabra);
+						fprintf(archivoSalida," ");
+					}
+					palabra = strtok(NULL, " ");
+				}
+	    		}
+		}
+
+	
+fclose(archivo);
+}
 
 int show_usage()
 {
@@ -115,6 +227,8 @@ int main(int argc, char **argv)
 		printf("Utilizar stdin de entrada y archivo %s de salida", output_path);
 	} else if (input == 1 && output == 1) {
 		printf("Utilizar archivo %s de entrada y archivo %s de salida", input_path, output_path);
+		procesar_archivo(input_path, output_path);	
+	  	
 	} else {
 		error_incorrect_parameters();
 	}

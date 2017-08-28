@@ -3,118 +3,121 @@
 #include <string.h>
 #include <ctype.h>
 
+#define VERSION "0.0.3"
+
+/*
+str: 	Pointer to an array of chars where the string read is copied.
+fp: 	Pointer to a FILE object that identifies an input stream.
+	stdin can be used as argument to read from the standard input.
+return: On success, the function returns str.
+	If the end-of-file is encountered and the pointer returned
+	is a null pointer.
+*/
+char* fgets2(char** str, FILE* fp)
+{
+	char* buffer = NULL;
+	size_t buffer_size = 128;
+	char c;
+	size_t p = 0;
+	buffer = malloc(buffer_size);
+
+	while (1) {
+		if (p + 1 == buffer_size) {
+			buffer_size *= 2;
+			buffer = realloc(buffer, buffer_size);
+		}
+		c = fgetc(fp);
+		if (c == EOF || c == '\n')
+			break;
+		buffer[p++] = c;
+	}
+	buffer[p] = '\0';
+	if (c == EOF)
+		return NULL;
+
+	*str = buffer;
+	return buffer;
+}
+
+int es_capicua(char* palabra)
+{
+	size_t izq = 0, longitud;
+	longitud = strlen(palabra);
+
+	if (longitud == 0)
+		return 0;
+
+	for (izq = 0; izq < longitud/2; izq++) {
+		int der = longitud - izq -1;
+		if (tolower(palabra[izq]) != tolower(palabra[der]))
+			return 0;
+	}
+	return 1;
+}
+
 int caracter_valido(char caracter)
 {
-	char letra = tolower(caracter);
-	if((letra > 96 && letra < 123) || (letra > 47 && letra < 58) || letra == 45 || letra == 95)
+	char minuscula = tolower(caracter);
+	if (
+		(minuscula > 96 && minuscula < 123) ||
+		(minuscula > 47 && minuscula < 58)  ||
+	  	minuscula == 45 || minuscula == 95  ||
+		minuscula == '\0')
 	{
 		return 1;
 	}
 	return 0;
 }
 
-int es_capicua(char* palabra)
+/*
+	Procesa un texto y devuelve uno nuevo con los caracteres
+	no contemplados reemplazados por espacios.
+*/
+int quitar_caracteres_invalidos(char* texto, char** texto_valido)
 {
-	int i = 0, longitud;
-	longitud = strlen(palabra);
-	
-	if(longitud != 0)
-	{
+	size_t i;
+	*texto_valido = malloc(strlen(texto) + 1);
+	strncpy (*texto_valido, texto, strlen(texto) + 1);
 
-		for(i=0; i < longitud/2; i++)
-		{
-			int aux = longitud - i -1;
-			/*char a = palabra[i];
-			char b =palabra[aux];
-			printf("%s \n",palabra);
-			printf("%c",a);
-			printf("%c \n",b);	
-			if(tolower(palabra[i]) != tolower(palabra[longitud-i]))*/
-			if(palabra[i] != palabra[aux])
-			{
-				return 0;
-			}
-		}
-		return 1;	
+	for (i = 0; i < strlen(*texto_valido); i++)
+		if (!caracter_valido((*texto_valido)[i]))
+			(*texto_valido)[i] = ' ';
 
-	}
-	return 0;
+	return 1;
 }
 
-/*Procesa un text y reemplaza los caracteres no contemplados por espacios*/
-char* quitar_caracteres_invalidos(char* texto)
-{
-return texto;
-	/*int i;
-	char* texto_formateado = NULL;
-	for(i=0;i < strlen(texto); i++)
-	{
-		if(caracter_valido(texto[i]))
-		{
-		    size_t len = strlen(texto_formateado);
-		    char *texto_formateado2 = malloc(len + 1 + 1 );
-		    strcpy(texto_formateado2, texto_formateado);
-		    texto_formateado2[len] = texto[i];
-		    texto_formateado2[len + 1] = '\0';
-		    texto_formateado = texto_formateado2;
-		}
-		    size_t len = strlen(texto_formateado);
-		    char *texto_formateado2 = malloc(len + 1 + 1 );
-		    strcpy(texto_formateado2, texto_formateado);
-		    texto_formateado2[len] = " ";
-		    texto_formateado2[len + 1] = '\0';
-		    texto_formateado = texto_formateado2;
-		
-	}
-	return texto_formateado;*/
-}
-
-int escribir_archivo(FILE* output_file, char* palabra)
-{
-	fprintf(output_file, palabra);
-	fprintf(output_file," ");
-}
-
-
-/*que era lo que hacia esto??? */
-char* procesar_archivo(char* input_path, char* output_path)
+int procesar_archivo(char* input_path, char* output_path)
 {	/*Abre el archivo que se va a leer con las palabras capicuas*/
-	FILE* archivo = fopen(input_path, "r");
+	FILE* archivo_entrada = fopen(input_path, "r");
 	/*Abre el archivo sobre el que se va a escribir la salida */
-	FILE* archivoSalida = fopen(output_path, "w");
-	
-	
-		char str[999];
-		
-		if (archivo) 
-		{
-			char* linea_nueva;
-			
-			while (fgets(str, 999, archivo))
-			{        	
+	FILE* archivo_salida = fopen(output_path, "w");
+	char* linea;
+	char* linea_valida;
 
-				linea_nueva = quitar_caracteres_invalidos(str);
-				
-				char* palabra = strtok(linea_nueva, " ");
-				while(palabra)
-				{
-				
-					if(es_capicua(palabra))
-					{
-						/*escribir_archivo(archivo, palabra);	*/
-						fprintf(archivoSalida, palabra);
-						fprintf(archivoSalida," ");
-					}
-					palabra = strtok(NULL, " ");
-				}
-	    		}
+	if (!archivo_entrada || !archivo_salida) {
+		if (!archivo_entrada) fclose(archivo_entrada);
+		if (!archivo_salida)  fclose(archivo_salida);
+		return 0;
+	}
+
+	while (fgets2(&linea, archivo_entrada))	{
+		quitar_caracteres_invalidos(linea, &linea_valida);
+		char* palabra = strtok(linea_valida, " ");
+		while (palabra) {
+			if (es_capicua(palabra))
+				fprintf(archivo_salida, "%s ", palabra);
+			palabra = strtok(NULL, " ");
 		}
+        	free(linea);
+        	free(linea_valida);
+    	}
 
-	
-fclose(archivo);
+	fclose(archivo_entrada);
+	fclose(archivo_salida);
+	return 1;
 }
 
-int show_usage()
+void show_usage()
 {
 	printf("Usage:\n");
 	printf("\ttp0 -h\n");
@@ -122,61 +125,43 @@ int show_usage()
 	printf("\ttp0 [options]\n");
 	printf("\n");
 	printf("Options:\n");
-	printf("\t-V --version\tPrint version and quit.\n");
+	printf("\t-v --version\tPrint version and quit.\n");
 	printf("\t-h --help\tPrint this information.\n");
 	printf("\t-i --input\tLocation of the input file.\n");
 	printf("\t-o --output\tLocation of the output file.\n");
 	printf("\n");
 	printf("Examples:\n");
-	printf("\ttp0 -i ~/input ~/output");
+	printf("\ttp0 -i ~/input ~/output\n");
 }
 
-int show_args(int argc, char **argv)
+void show_version()
 {
-	for (int i = 0; i < argc; ++i) {
-		printf("argv[%d]: %s\n", i, argv[i]);
-	}
-}
-
-int show_version()
-{
-	printf("tp0 version: 0.0.1b");
-}
-
-int process(char* path_input, char* path_output)
-{
-	printf("Procesando entrada: %s, salida: %s...", path_input, path_output);
-}
-
-int error_msg_incorrect_parameters()
-{
-	fprintf(stderr, "fatal error: The parameters are incorrect!\n");
+	printf("tp0 version: %s\n", VERSION);
 }
 
 int error_incorrect_parameters()
 {
-	error_msg_incorrect_parameters();
+	fprintf(stderr, "fatal error: The parameters are incorrect!\n");
 	show_usage();
 	exit(1);
 }
 
 int main(int argc, char **argv)
 {
-	int i;
+	size_t i;
 	int version = 0;
 	int help = 0;
 	int input = 0;
-	char* input_path;
 	int output = 0;
+	char* input_path;
 	char* output_path;
-	
 
 	for (i = 1; i < argc; i++) {
-		if (strcmp(argv[i], "-v") == 0) {
+		if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) {
 			version++;
-		} else if (strcmp(argv[i], "-h") == 0) {
+		} else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
 			help++;
-		} else if (strcmp(argv[i], "-i") == 0) {
+		} else if (strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "--input") == 0) {
 			input++;
 			if (i + 1 <= argc - 1) {
 				i++;
@@ -184,7 +169,7 @@ int main(int argc, char **argv)
 			} else {
 				error_incorrect_parameters();
 			}
-		} else if (strcmp(argv[i], "-o") == 0) {
+		} else if (strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--output") == 0) {
 			output++;
 			if (i + 1 <= argc - 1) {
 				i++;
@@ -200,7 +185,7 @@ int main(int argc, char **argv)
 	if (version > 1 || help > 1 || input > 1 || output > 1) {
 		error_incorrect_parameters();
 	}
-	
+
 	if (help == 1) {
 		if (argc == 2) {
 			show_usage();
@@ -220,19 +205,17 @@ int main(int argc, char **argv)
 	}
 
 	if (input == 0 && output == 0) {
-		printf("Utilizar stdin de entrada y stdout de salida");
+		printf("Utilizando \'stdin\' de entrada y \'stdout\' de salida...\n");
 	} else if ((input == 1 && output == 0) || (input == 1 && strcmp(output_path, "-") == 0)) {
-		printf("Utilizar archivo %s de entrada y stdout de salida", input_path);
+		printf("Utilizando archivo \'%s\' de entrada y \'stdout\' de salida...\n", input_path);
 	} else if ((input == 0 && output == 1) || (strcmp(input_path, "-") == 0 && output == 1)) {
-		printf("Utilizar stdin de entrada y archivo %s de salida", output_path);
+		printf("Utilizando \'stdin\' de entrada y archivo \'%s\' de salida...\n", output_path);
 	} else if (input == 1 && output == 1) {
-		printf("Utilizar archivo %s de entrada y archivo %s de salida", input_path, output_path);
-		procesar_archivo(input_path, output_path);	
-	  	
+		printf("Utilizando archivo \'%s\' de entrada y archivo \'%s\' de salida...\n", input_path, output_path);
+		procesar_archivo(input_path, output_path);
 	} else {
 		error_incorrect_parameters();
 	}
 
 	return 0;
 }
-    

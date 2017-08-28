@@ -43,8 +43,7 @@ int es_capicua(char* palabra)
 {
 	size_t izq = 0, longitud;
 	longitud = strlen(palabra);
-
-	if (longitud == 0)
+	if (longitud == 0 || longitud == 1)
 		return 0;
 
 	for (izq = 0; izq < longitud/2; izq++) {

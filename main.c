@@ -45,6 +45,27 @@ char* fgets2(char** str, FILE* fp)
 	return buffer;
 }
 
+char* read_all_file(char** str, FILE* fp)
+{
+	char* buffer = NULL;
+	size_t buffer_size = 128;
+	char c;
+	size_t p = 0;
+	buffer = malloc(buffer_size);
+
+	while ((c = fgetc(fp)) != EOF) {
+		if (p + 1 == buffer_size) {
+			buffer_size *= 2;
+			buffer = realloc(buffer, buffer_size);
+		}
+		//printf("[%d]", (int)c);
+		buffer[p++] = c;
+	}
+	buffer[p] = '\0';
+	*str = buffer;
+	return buffer;
+}
+
 int es_capicua(char* palabra)
 {
 	size_t izq = 0, longitud;
@@ -102,17 +123,20 @@ int procesar_archivo(FILE* archivo_entrada, FILE* archivo_salida)
 		return 0;
 	}
 
-	while (fgets2(&linea, archivo_entrada))	{
-		quitar_caracteres_invalidos(linea, &linea_valida);
-		char* palabra = strtok(linea_valida, " ");
-		while (palabra) {
-			if (es_capicua(palabra))
-				fprintf(archivo_salida, "%s ", palabra);
-			palabra = strtok(NULL, " ");
-		}
-        	free(linea);
-        	free(linea_valida);
-    	}
+	read_all_file(&linea, archivo_entrada);
+	printf("xxx:%s", linea);
+	quitar_caracteres_invalidos(linea, &linea_valida);
+	//printf("yyy:%s", linea);
+
+	char* palabra = strtok(linea_valida, " ");
+	while (palabra) {
+		if (es_capicua(palabra))
+			fprintf(archivo_salida, "%s ", palabra);
+		palabra = strtok(NULL, " ");
+	}
+
+	free(linea);
+        free(linea_valida);
 
 	return 1;
 }

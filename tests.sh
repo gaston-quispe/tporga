@@ -18,5 +18,5 @@ do
         fi
 done
 
-echo "Pasados $test_pasados tests de $cantidad_archivos_entrada"
-echo "Fallidos $test_fallidos tests de $cantidad_archivos_entrada"
+echo 'Pasados' $test_pasados 'tests de' $cantidad_archivos_entrada
+echo 'Fallidos' $test_fallidos 'tests de' $cantidad_archivos_entrada

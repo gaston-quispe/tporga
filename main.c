@@ -4,6 +4,12 @@
 #include <ctype.h>
 
 #define VERSION "0.0.3"
+typedef enum {
+	STDIN_STDOUT,
+	ARCHIVO_STDOUT,
+	STDIN_ARCHIVO,
+	ARCHIVO_ARCHIVO
+} handlers;
 
 /*
 str: 	Pointer to an array of chars where the string read is copied.
@@ -48,7 +54,7 @@ int es_capicua(char* palabra)
 
 	for (izq = 0; izq < longitud/2; izq++) {
 		int der = longitud - izq -1;
-		if (tolower(palabra[izq]) != tolower(palabra[der]))
+		if (tolower((int)palabra[izq]) != tolower((int)palabra[der]))
 			return 0;
 	}
 	return 1;
@@ -56,7 +62,7 @@ int es_capicua(char* palabra)
 
 int caracter_valido(char caracter)
 {
-	char minuscula = tolower(caracter);
+	char minuscula = tolower((int)caracter);
 	if (
 		(minuscula > 96 && minuscula < 123) ||
 		(minuscula > 47 && minuscula < 58)  ||
@@ -85,17 +91,14 @@ int quitar_caracteres_invalidos(char* texto, char** texto_valido)
 	return 1;
 }
 
-int procesar_archivo(char* input_path, char* output_path)
-{	/*Abre el archivo que se va a leer con las palabras capicuas*/
-	FILE* archivo_entrada = fopen(input_path, "r");
-	/*Abre el archivo sobre el que se va a escribir la salida */
-	FILE* archivo_salida = fopen(output_path, "w");
+int procesar_archivo(FILE* archivo_entrada, FILE* archivo_salida)
+{
 	char* linea;
 	char* linea_valida;
 
 	if (!archivo_entrada || !archivo_salida) {
-		if (!archivo_entrada) fclose(archivo_entrada);
-		if (!archivo_salida)  fclose(archivo_salida);
+		if (archivo_entrada) fclose(archivo_entrada);
+		if (archivo_salida)  fclose(archivo_salida);
 		return 0;
 	}
 
@@ -111,8 +114,6 @@ int procesar_archivo(char* input_path, char* output_path)
         	free(linea_valida);
     	}
 
-	fclose(archivo_entrada);
-	fclose(archivo_salida);
 	return 1;
 }
 
@@ -154,6 +155,9 @@ int main(int argc, char **argv)
 	int output = 0;
 	char* input_path;
 	char* output_path;
+	FILE* input_handler = NULL;
+	FILE* output_handler = NULL;
+	handlers tipo_apertura = 0;
 
 	for (i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) {
@@ -203,17 +207,70 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if (input == 0 && output == 0) {
-		printf("Utilizando \'stdin\' de entrada y \'stdout\' de salida...\n");
-	} else if ((input == 1 && output == 0) || (input == 1 && strcmp(output_path, "-") == 0)) {
-		printf("Utilizando archivo \'%s\' de entrada y \'stdout\' de salida...\n", input_path);
-	} else if ((input == 0 && output == 1) || (strcmp(input_path, "-") == 0 && output == 1)) {
-		printf("Utilizando \'stdin\' de entrada y archivo \'%s\' de salida...\n", output_path);
-	} else if (input == 1 && output == 1) {
-		printf("Utilizando archivo \'%s\' de entrada y archivo \'%s\' de salida...\n", input_path, output_path);
-		procesar_archivo(input_path, output_path);
-	} else {
+	if (input == 0 && output == 0)
+		tipo_apertura = STDIN_STDOUT;
+	else if ((input == 1 && output == 0) || (input == 1 && strcmp(output_path, "-") == 0))
+		tipo_apertura = ARCHIVO_STDOUT;
+	else if ((input == 0 && output == 1) || (strcmp(input_path, "-") == 0 && output == 1))
+		tipo_apertura = STDIN_ARCHIVO;
+	else if (input == 1 && output == 1)
+		tipo_apertura = ARCHIVO_ARCHIVO;
+	else
 		error_incorrect_parameters();
+
+	switch (tipo_apertura) {
+		case STDIN_STDOUT:
+			printf("Utilizando \'stdin\' de entrada y \'stdout\' de salida...\n");
+			input_handler = stdin;
+			output_handler = stdout;
+			break;
+		case ARCHIVO_STDOUT:
+			printf("Utilizando archivo \'%s\' de entrada y \'stdout\' de salida...\n", input_path);
+			input_handler = fopen(input_path, "r");
+			output_handler = stdout;
+			if (!input_handler) {
+				fprintf(stderr, "Error en apertura de archivo");
+				return 1;
+			}
+			break;
+		case STDIN_ARCHIVO:
+			printf("Utilizando \'stdin\' de entrada y archivo \'%s\' de salida...\n", output_path);
+			input_handler = stdin;
+			output_handler = fopen(output_path, "w");
+			if (!output_handler) {
+				fprintf(stderr, "Error en apertura de archivo");
+				return 1;
+			}
+			break;
+		case ARCHIVO_ARCHIVO:
+			printf("Utilizando archivo \'%s\' de entrada y archivo \'%s\' de salida...\n", input_path, output_path);
+			input_handler = fopen(input_path, "r");
+			output_handler = fopen(output_path, "w");
+
+			if (!input_handler || !output_handler) {
+				if (input_handler) fclose(input_handler);
+				if (output_handler) fclose(output_handler);
+				fprintf(stderr, "Error en apertura de archivo");
+				return 1;
+			}
+			break;
+	}
+
+	procesar_archivo(input_handler, output_handler);
+
+	switch (tipo_apertura) {
+		case STDIN_STDOUT:
+			break;
+		case ARCHIVO_STDOUT:
+			fclose(input_handler);
+			break;
+		case STDIN_ARCHIVO:
+			fclose(output_handler);
+			break;
+		case ARCHIVO_ARCHIVO:
+			fclose(input_handler);
+			fclose(output_handler);
+			break;
 	}
 
 	return 0;

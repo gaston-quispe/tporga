@@ -1,11 +1,22 @@
-./a.out -i Tests/Entrada1.txt | diff Tests/SalidaEsperada1.txt -
-./a.out -i Tests/Entrada2.txt | diff Tests/SalidaEsperada2.txt -
-./a.out -i Tests/Entrada3.txt | diff Tests/SalidaEsperada3.txt -
-./a.out -i Tests/Entrada4.txt | diff Tests/SalidaEsperada4.txt -
-./a.out -i Tests/Entrada5.txt | diff Tests/SalidaEsperada5.txt -
-./a.out -i Tests/Entrada6.txt | diff Tests/SalidaEsperada6.txt -
-./a.out -i Tests/Entrada7.txt | diff Tests/SalidaEsperada7.txt -
-./a.out -i Tests/Entrada8.txt | diff Tests/SalidaEsperada8.txt -
-./a.out -i Tests/Entrada9.txt | diff Tests/SalidaEsperada9.txt -
-./a.out -i Tests/Entrada10.txt | diff Tests/SalidaEsperada10.txt -
+cantidad_archivos_entrada=$(ls -1q Tests/Entrada*.txt | wc -l)
+test_fallidos=0
+test_pasados=0
 
+for i in `seq 1 $cantidad_archivos_entrada`
+do
+        path_entrada='Tests/Entrada'$i'.txt'
+        path_salida='Tests/SalidaEsperada'$i'.txt'
+
+        if [ $(./a.out -i $path_entrada | diff $path_salida -) ];
+        then
+                echo "Test $i: ERROR"
+                ./a.out -i $path_entrada | diff $path_salida -
+                test_fallidos=$((test_fallidos+1))
+        else
+                echo "Test $i:OK"
+                test_pasados=$((test_pasados+1))
+        fi
+done
+
+echo "Pasados $test_pasados tests de $cantidad_archivos_entrada"
+echo "Fallidos $test_fallidos tests de $cantidad_archivos_entrada"

@@ -9,42 +9,16 @@ typedef enum {
 	ARCHIVO_STDOUT,
 	STDIN_ARCHIVO,
 	ARCHIVO_ARCHIVO
-} handlers;
+} modo_entrada_salida;
 
 /*
-str: 	Pointer to an array of chars where the string read is copied.
-fp: 	Pointer to a FILE object that identifies an input stream.
-	stdin can be used as argument to read from the standard input.
-return: On success, the function returns str.
-	If the end-of-file is encountered and the pointer returned
-	is a null pointer.
+	Lee todo el archivo y lo devuelve en el str y tmb mediante el
+	return de la funcion.
+
+	str:	Puntero a un array de chars en que se devuelve el archivo
+	fp: 	Puntero a un objeto FILE que identifica un flojo de entrada
+		stdin puede ser usada como argumento.
 */
-char* fgets2(char** str, FILE* fp)
-{
-	char* buffer = NULL;
-	size_t buffer_size = 128;
-	char c;
-	size_t p = 0;
-	buffer = malloc(buffer_size);
-
-	while (1) {
-		if (p + 1 == buffer_size) {
-			buffer_size *= 2;
-			buffer = realloc(buffer, buffer_size);
-		}
-		c = fgetc(fp);
-		if (c == EOF || c == '\n')
-			break;
-		buffer[p++] = c;
-	}
-	buffer[p] = '\0';
-	if (c == EOF)
-		return NULL;
-
-	*str = buffer;
-	return buffer;
-}
-
 char* read_all_file(char** str, FILE* fp)
 {
 	char* buffer = NULL;
@@ -58,12 +32,11 @@ char* read_all_file(char** str, FILE* fp)
 			buffer_size *= 2;
 			buffer = realloc(buffer, buffer_size);
 		}
-		//printf("[%d]", (int)c);
 		buffer[p++] = c;
 	}
 	buffer[p] = '\0';
 	*str = buffer;
-	return buffer;
+	return *str;
 }
 
 int es_capicua(char* palabra)
@@ -73,8 +46,8 @@ int es_capicua(char* palabra)
 	if (longitud == 0 || longitud == 1)
 		return 0;
 
-	for (izq = 0; izq < longitud/2; izq++) {
-		int der = longitud - izq -1;
+	for (izq = 0; izq < longitud / 2; izq++) {
+		int der = longitud - izq - 1;
 		if (tolower((int)palabra[izq]) != tolower((int)palabra[der]))
 			return 0;
 	}
@@ -114,8 +87,8 @@ int quitar_caracteres_invalidos(char* texto, char** texto_valido)
 
 int procesar_archivo(FILE* archivo_entrada, FILE* archivo_salida)
 {
-	char* linea;
-	char* linea_valida;
+	char* caracteres;
+	char* caracteres_validos;
 
 	if (!archivo_entrada || !archivo_salida) {
 		if (archivo_entrada) fclose(archivo_entrada);
@@ -123,20 +96,18 @@ int procesar_archivo(FILE* archivo_entrada, FILE* archivo_salida)
 		return 0;
 	}
 
-	read_all_file(&linea, archivo_entrada);
-	printf("xxx:%s", linea);
-	quitar_caracteres_invalidos(linea, &linea_valida);
-	//printf("yyy:%s", linea);
+	read_all_file(&caracteres, archivo_entrada);
+	quitar_caracteres_invalidos(caracteres, &caracteres_validos);
 
-	char* palabra = strtok(linea_valida, " ");
+	char* palabra = strtok(caracteres_validos, " ");
 	while (palabra) {
 		if (es_capicua(palabra))
 			fprintf(archivo_salida, "%s ", palabra);
 		palabra = strtok(NULL, " ");
 	}
 
-	free(linea);
-        free(linea_valida);
+	free(caracteres);
+        free(caracteres_validos);
 
 	return 1;
 }
@@ -181,7 +152,7 @@ int main(int argc, char **argv)
 	char* output_path;
 	FILE* input_handler = NULL;
 	FILE* output_handler = NULL;
-	handlers tipo_apertura = 0;
+	modo_entrada_salida entrada_salida = 0;
 
 	for (i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) {
@@ -232,17 +203,17 @@ int main(int argc, char **argv)
 	}
 
 	if (input == 0 && output == 0)
-		tipo_apertura = STDIN_STDOUT;
+		entrada_salida = STDIN_STDOUT;
 	else if ((input == 1 && output == 0) || (input == 1 && strcmp(output_path, "-") == 0))
-		tipo_apertura = ARCHIVO_STDOUT;
+		entrada_salida = ARCHIVO_STDOUT;
 	else if ((input == 0 && output == 1) || (strcmp(input_path, "-") == 0 && output == 1))
-		tipo_apertura = STDIN_ARCHIVO;
+		entrada_salida = STDIN_ARCHIVO;
 	else if (input == 1 && output == 1)
-		tipo_apertura = ARCHIVO_ARCHIVO;
+		entrada_salida = ARCHIVO_ARCHIVO;
 	else
 		error_incorrect_parameters();
 
-	switch (tipo_apertura) {
+	switch (entrada_salida) {
 		case STDIN_STDOUT:
 			printf("Utilizando \'stdin\' de entrada y \'stdout\' de salida...\n");
 			input_handler = stdin;
@@ -282,7 +253,7 @@ int main(int argc, char **argv)
 
 	procesar_archivo(input_handler, output_handler);
 
-	switch (tipo_apertura) {
+	switch (entrada_salida) {
 		case STDIN_STDOUT:
 			break;
 		case ARCHIVO_STDOUT:

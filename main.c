@@ -26,12 +26,19 @@ char* read_all_file(char** str, FILE* fp)
 	char c;
 	size_t p = 0;
 	buffer = malloc(buffer_size);
-
+	if (!buffer) {
+		fprintf(stderr, "Error al reservar memoria");
+		exit(1);
+	}
 
 	while ((c = fgetc(fp)) != EOF) {
 		if (p + 1 == buffer_size) {
 			buffer_size *= 2;
 			buffer = realloc(buffer, buffer_size);
+			if (!buffer) {
+				fprintf(stderr, "Error al reservar memoria");
+				exit(1);
+			}
 		}
 		buffer[p++] = c;
 	}

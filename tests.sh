@@ -7,7 +7,7 @@ do
         path_entrada='Tests/Entrada'$i'.txt'
         path_salida='Tests/SalidaEsperada'$i'.txt'
 
-        if [ $(./a.out -i $path_entrada | diff $path_salida -) ];
+        if [[ $(./a.out -i "$path_entrada" | diff "$path_salida" -) ]];
         then
                 echo "Test $i: ERROR"
                 ./a.out -i $path_entrada | diff $path_salida -

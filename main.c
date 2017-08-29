@@ -102,7 +102,7 @@ int procesar_archivo(FILE* archivo_entrada, FILE* archivo_salida)
 	char* palabra = strtok(caracteres_validos, " ");
 	while (palabra) {
 		if (es_capicua(palabra))
-			fprintf(archivo_salida, "%s ", palabra);
+			fprintf(archivo_salida, "%s\n", palabra);
 		palabra = strtok(NULL, " ");
 	}
 
@@ -215,12 +215,10 @@ int main(int argc, char **argv)
 
 	switch (entrada_salida) {
 		case STDIN_STDOUT:
-			printf("Utilizando \'stdin\' de entrada y \'stdout\' de salida...\n");
 			input_handler = stdin;
 			output_handler = stdout;
 			break;
 		case ARCHIVO_STDOUT:
-			printf("Utilizando archivo \'%s\' de entrada y \'stdout\' de salida...\n", input_path);
 			input_handler = fopen(input_path, "r");
 			output_handler = stdout;
 			if (!input_handler) {
@@ -229,7 +227,6 @@ int main(int argc, char **argv)
 			}
 			break;
 		case STDIN_ARCHIVO:
-			printf("Utilizando \'stdin\' de entrada y archivo \'%s\' de salida...\n", output_path);
 			input_handler = stdin;
 			output_handler = fopen(output_path, "w");
 			if (!output_handler) {
@@ -238,7 +235,6 @@ int main(int argc, char **argv)
 			}
 			break;
 		case ARCHIVO_ARCHIVO:
-			printf("Utilizando archivo \'%s\' de entrada y archivo \'%s\' de salida...\n", input_path, output_path);
 			input_handler = fopen(input_path, "r");
 			output_handler = fopen(output_path, "w");
 

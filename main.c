@@ -27,6 +27,7 @@ char* read_all_file(char** str, FILE* fp)
 	size_t p = 0;
 	buffer = malloc(buffer_size);
 
+
 	while ((c = fgetc(fp)) != EOF) {
 		if (p + 1 == buffer_size) {
 			buffer_size *= 2;
@@ -43,7 +44,7 @@ int es_capicua(char* palabra)
 {
 	size_t izq = 0, longitud;
 	longitud = strlen(palabra);
-	if (longitud == 0 || longitud == 1)
+	if (longitud == 0)
 		return 0;
 
 	for (izq = 0; izq < longitud / 2; izq++) {

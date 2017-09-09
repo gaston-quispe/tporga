@@ -1,3 +1,4 @@
+#!/bin/bash
 cantidad_archivos_entrada=$(ls -1q Tests/Entrada*.txt | wc -l)
 test_fallidos=0
 test_pasados=0
@@ -19,4 +20,3 @@ do
 done
 
 echo 'Pasados' $test_pasados 'tests de' $cantidad_archivos_entrada
-echo 'Fallidos' $test_fallidos 'tests de' $cantidad_archivos_entrada

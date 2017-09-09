@@ -11,42 +11,6 @@ typedef enum {
 	ARCHIVO_ARCHIVO
 } modo_entrada_salida;
 
-/*
-	Lee todo el archivo y lo devuelve en el str y tmb mediante el
-	return de la funcion.
-
-	str:	Puntero a un array de chars en que se devuelve el archivo
-	fp: 	Puntero a un objeto FILE que identifica un flojo de entrada
-		stdin puede ser usada como argumento.
-*/
-char* read_all_file(char** str, FILE* fp)
-{
-	char* buffer = NULL;
-	size_t buffer_size = 128;
-	char c;
-	size_t p = 0;
-	buffer = malloc(buffer_size);
-	if (!buffer) {
-		fprintf(stderr, "Error al reservar memoria");
-		exit(1);
-	}
-
-	while ((c = fgetc(fp)) != EOF) {
-		if (p + 1 == buffer_size) {
-			buffer_size *= 2;
-			buffer = realloc(buffer, buffer_size);
-			if (!buffer) {
-				fprintf(stderr, "Error al reservar memoria");
-				exit(1);
-			}
-		}
-		buffer[p++] = c;
-	}
-	buffer[p] = '\0';
-	*str = buffer;
-	return *str;
-}
-
 int es_capicua(char* palabra)
 {
 	size_t izq = 0, longitud;
@@ -62,41 +26,63 @@ int es_capicua(char* palabra)
 	return 1;
 }
 
-int caracter_valido(char caracter)
+int caracter_valido(int caracter)
 {
-	char minuscula = tolower((int)caracter);
+	int minuscula = tolower((int)caracter);
 	if (
 		(minuscula > 96 && minuscula < 123) ||
 		(minuscula > 47 && minuscula < 58)  ||
-	  	minuscula == 45 || minuscula == 95  ||
-		minuscula == '\0')
+	  	minuscula == 45 || minuscula == 95)
 	{
 		return 1;
 	}
 	return 0;
 }
 
-/*
-	Procesa un texto y devuelve uno nuevo con los caracteres
-	no contemplados reemplazados por espacios.
-*/
-int quitar_caracteres_invalidos(char* texto, char** texto_valido)
-{
-	size_t i;
-	*texto_valido = malloc(strlen(texto) + 1);
-	strncpy (*texto_valido, texto, strlen(texto) + 1);
+int leer_palabra_valida(char** str, FILE* fp) {
+	char* buffer = NULL;
+	size_t buffer_size = 128;
+	int c;
+	size_t p_comienzo = 0;
+	size_t p_longitud = 0;
+	buffer = malloc(buffer_size);
+	if (!buffer) {
+		fprintf(stderr, "Error al reservar memoria");
+		exit(1);
+	}
+	// Avanzar puntero hasta encontrar el comienzo de una palabra valida
+	while (!feof(fp) && !caracter_valido(c = fgetc(fp))) {
+		if (ferror(fp))
+			fprintf(stderr, "Error al leer archivo de entrada");
+		p_comienzo++;
+	}
 
-	for (i = 0; i < strlen(*texto_valido); i++)
-		if (!caracter_valido((*texto_valido)[i]))
-			(*texto_valido)[i] = ' ';
+	// Avanzar puntero hasta que finalice la palabra valida
+	while (!feof(fp) && caracter_valido(c)) {
+		if (p_comienzo + p_longitud + 1 == buffer_size) {
+			buffer_size *= 2;
+			buffer = realloc(buffer, buffer_size);
+			if (!buffer) {
+				fprintf(stderr, "Error al reservar memoria");
+				exit(1);
+			}
+		}
+		buffer[p_longitud++] = c;
+		c = fgetc(fp);
+		if (ferror(fp))
+			fprintf(stderr, "Error al leer archivo de entrada");
+	}
+	buffer[p_longitud] = '\0';
+	*str = buffer;
 
-	return 1;
+	if (feof(fp) || p_longitud == 0)
+		return 0; //No se encontro palabra valida
+	return 1; //Se encontro palabra valida
 }
 
 int procesar_archivo(FILE* archivo_entrada, FILE* archivo_salida)
 {
-	char* caracteres;
-	char* caracteres_validos;
+	char* palabra_valida;
 
 	if (!archivo_entrada || !archivo_salida) {
 		if (archivo_entrada) fclose(archivo_entrada);
@@ -104,18 +90,14 @@ int procesar_archivo(FILE* archivo_entrada, FILE* archivo_salida)
 		return 0;
 	}
 
-	read_all_file(&caracteres, archivo_entrada);
-	quitar_caracteres_invalidos(caracteres, &caracteres_validos);
-
-	char* palabra = strtok(caracteres_validos, " ");
-	while (palabra) {
-		if (es_capicua(palabra))
-			fprintf(archivo_salida, "%s\n", palabra);
-		palabra = strtok(NULL, " ");
+	while (leer_palabra_valida(&palabra_valida, archivo_entrada)) {
+		if (es_capicua(palabra_valida)) {
+		 	fprintf(archivo_salida, "%s\n", palabra_valida);
+			if (ferror(archivo_salida))
+  				fprintf(stderr, "Error al escribir en archivo de salida\n");
+		}
+		free(palabra_valida);
 	}
-
-	free(caracteres);
-        free(caracteres_validos);
 
 	return 1;
 }
@@ -210,11 +192,13 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if (input == 0 && output == 0)
+	if ((input == 0 && output == 0) ||
+		((input == 1 && strcmp(input_path, "-") == 0) &&
+		(output == 1 && strcmp(output_path, "-") == 0)))
 		entrada_salida = STDIN_STDOUT;
-	else if ((input == 1 && output == 0) || (input == 1 && strcmp(output_path, "-") == 0))
+	else if ((input == 1 && output == 0) || (input == 1 && output == 1 && strcmp(output_path, "-") == 0))
 		entrada_salida = ARCHIVO_STDOUT;
-	else if ((input == 0 && output == 1) || (strcmp(input_path, "-") == 0 && output == 1))
+	else if ((input == 0 && output == 1) || (input == 1 && strcmp(input_path, "-") == 0 && output == 1))
 		entrada_salida = STDIN_ARCHIVO;
 	else if (input == 1 && output == 1)
 		entrada_salida = ARCHIVO_ARCHIVO;

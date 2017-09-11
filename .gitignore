@@ -3,3 +3,7 @@ entrada
 salida
 entrada.txt
 salida.txt
+*.log
+*.aux
+*.toc
+*.idx

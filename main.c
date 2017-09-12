@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#define VERSION "0.0.3"
+#define VERSION "0.1.0beta"
 typedef enum {
 	STDIN_STDOUT,
 	ARCHIVO_STDOUT,
@@ -102,7 +102,7 @@ int procesar_archivo(FILE* archivo_entrada, FILE* archivo_salida)
 	return 1;
 }
 
-void show_usage()
+void mostrar_usage()
 {
 	printf("Usage:\n");
 	printf("\ttp0 -h\n");
@@ -119,15 +119,15 @@ void show_usage()
 	printf("\ttp0 -i ~/input ~/output\n");
 }
 
-void show_version()
+void mostrar_version()
 {
 	printf("tp0 version: %s\n", VERSION);
 }
 
-int error_incorrect_parameters()
+int error_parametros_incorrectos()
 {
-	fprintf(stderr, "fatal error: The parameters are incorrect!\n");
-	show_usage();
+	fprintf(stderr, "erro fatal: Los parametros son incorrectos!\n");
+	mostrar_usage();
 	exit(1);
 }
 
@@ -155,7 +155,7 @@ int main(int argc, char **argv)
 				i++;
 				input_path = argv[i];
 			} else {
-				error_incorrect_parameters();
+				error_parametros_incorrectos();
 			}
 		} else if (strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--output") == 0) {
 			output++;
@@ -163,47 +163,58 @@ int main(int argc, char **argv)
 				i++;
 				output_path = argv[i];
 			} else {
-				error_incorrect_parameters();
+				error_parametros_incorrectos();
 			}
 		} else {
-			error_incorrect_parameters();
+			error_parametros_incorrectos();
 		}
 	}
 
 	if (version > 1 || help > 1 || input > 1 || output > 1) {
-		error_incorrect_parameters();
+		error_parametros_incorrectos();
 	}
 
 	if (help == 1) {
 		if (argc == 2) {
-			show_usage();
+			mostrar_usage();
 			exit(0);
 		} else {
-			error_incorrect_parameters();
+			error_parametros_incorrectos();
 		}
 	}
 
 	if (version == 1) {
 		if (argc == 2) {
-			show_version();
+			mostrar_version();
 			exit(0);
 		} else {
-			error_incorrect_parameters();
+			error_parametros_incorrectos();
 		}
 	}
 
-	if ((input == 0 && output == 0) ||
-		((input == 1 && strcmp(input_path, "-") == 0) &&
-		(output == 1 && strcmp(output_path, "-") == 0)))
-		entrada_salida = STDIN_STDOUT;
-	else if ((input == 1 && output == 0) || (input == 1 && output == 1 && strcmp(output_path, "-") == 0))
-		entrada_salida = ARCHIVO_STDOUT;
-	else if ((input == 0 && output == 1) || (input == 1 && strcmp(input_path, "-") == 0 && output == 1))
-		entrada_salida = STDIN_ARCHIVO;
-	else if (input == 1 && output == 1)
-		entrada_salida = ARCHIVO_ARCHIVO;
+	if     ((input == 0 && output == 0) ||
+		(input == 0 && output == 1 && strcmp(output_path, "-") == 0) ||
+		(input == 1 && output == 0 && strcmp(input_path,  "-") == 0) ||
+		(input == 1 && output == 1 && strcmp(input_path,  "-") == 0 &&
+					      strcmp(output_path, "-") == 0))
+			entrada_salida = STDIN_STDOUT;
 	else
-		error_incorrect_parameters();
+	if     ((input == 0 && output == 1 && strcmp(output_path, "-") != 0) ||
+	 	(input == 1 && output == 1 && strcmp(input_path,  "-") == 0 &&
+		 		              strcmp(output_path, "-") != 0))
+			entrada_salida = STDIN_ARCHIVO;
+	else
+	if     ((input == 1 && output == 0 && strcmp(input_path,  "-") != 0) ||
+	 	(input == 1 && output == 1 && strcmp(input_path,  "-") != 0 &&
+					      strcmp(output_path, "-") == 0))
+			entrada_salida = ARCHIVO_STDOUT;
+	else
+	if 	(input == 1 && output == 1 &&
+		strcmp(input_path,  "-") != 0 &&
+		strcmp(output_path,  "-") != 0)
+		 	entrada_salida = ARCHIVO_ARCHIVO;
+	else
+		error_parametros_incorrectos();
 
 	switch (entrada_salida) {
 		case STDIN_STDOUT:

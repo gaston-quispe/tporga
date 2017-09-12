@@ -440,9 +440,9 @@ $LC15:
 	.ascii	"\ttp0 -i ~/input ~/output\n\000"
 	.text
 	.align	2
-	.globl	show_usage
-	.ent	show_usage
-show_usage:
+	.globl	mostrar_usage
+	.ent	mostrar_usage
+mostrar_usage:
 	.frame	$fp,40,$ra		# vars= 0, regs= 3/0, args= 16, extra= 8
 	.mask	0xd0000000,-8
 	.fmask	0x00000000,0
@@ -499,20 +499,20 @@ show_usage:
 	lw	$fp,28($sp)
 	addu	$sp,$sp,40
 	j	$ra
-	.end	show_usage
-	.size	show_usage, .-show_usage
+	.end	mostrar_usage
+	.size	mostrar_usage, .-mostrar_usage
 	.rdata
 	.align	2
 $LC16:
 	.ascii	"tp0 version: %s\n\000"
 	.align	2
 $LC17:
-	.ascii	"0.0.3\000"
+	.ascii	"0.1.0beta\000"
 	.text
 	.align	2
-	.globl	show_version
-	.ent	show_version
-show_version:
+	.globl	mostrar_version
+	.ent	mostrar_version
+mostrar_version:
 	.frame	$fp,40,$ra		# vars= 0, regs= 3/0, args= 16, extra= 8
 	.mask	0xd0000000,-8
 	.fmask	0x00000000,0
@@ -534,17 +534,17 @@ show_version:
 	lw	$fp,28($sp)
 	addu	$sp,$sp,40
 	j	$ra
-	.end	show_version
-	.size	show_version, .-show_version
+	.end	mostrar_version
+	.size	mostrar_version, .-mostrar_version
 	.rdata
 	.align	2
 $LC18:
-	.ascii	"fatal error: The parameters are incorrect!\n\000"
+	.ascii	"erro fatal: Los parametros son incorrectos!\n\000"
 	.text
 	.align	2
-	.globl	error_incorrect_parameters
-	.ent	error_incorrect_parameters
-error_incorrect_parameters:
+	.globl	error_parametros_incorrectos
+	.ent	error_parametros_incorrectos
+error_parametros_incorrectos:
 	.frame	$fp,40,$ra		# vars= 0, regs= 3/0, args= 16, extra= 8
 	.mask	0xd0000000,-8
 	.fmask	0x00000000,0
@@ -561,13 +561,13 @@ error_incorrect_parameters:
 	la	$a1,$LC18
 	la	$t9,fprintf
 	jal	$ra,$t9
-	la	$t9,show_usage
+	la	$t9,mostrar_usage
 	jal	$ra,$t9
 	li	$a0,1			# 0x1
 	la	$t9,exit
 	jal	$ra,$t9
-	.end	error_incorrect_parameters
-	.size	error_incorrect_parameters, .-error_incorrect_parameters
+	.end	error_parametros_incorrectos
+	.size	error_parametros_incorrectos, .-error_parametros_incorrectos
 	.rdata
 	.align	2
 $LC19:
@@ -727,7 +727,7 @@ $L70:
 	sw	$v0,44($fp)
 	b	$L61
 $L71:
-	la	$t9,error_incorrect_parameters
+	la	$t9,error_parametros_incorrectos
 	jal	$ra,$t9
 	b	$L61
 $L69:
@@ -770,11 +770,11 @@ $L75:
 	sw	$v0,48($fp)
 	b	$L61
 $L76:
-	la	$t9,error_incorrect_parameters
+	la	$t9,error_parametros_incorrectos
 	jal	$ra,$t9
 	b	$L61
 $L74:
-	la	$t9,error_incorrect_parameters
+	la	$t9,error_parametros_incorrectos
 	jal	$ra,$t9
 $L61:
 	lw	$v0,24($fp)
@@ -796,7 +796,7 @@ $L60:
 	beq	$v0,$zero,$L80
 	b	$L79
 $L80:
-	la	$t9,error_incorrect_parameters
+	la	$t9,error_parametros_incorrectos
 	jal	$ra,$t9
 $L79:
 	lw	$v1,32($fp)
@@ -805,13 +805,13 @@ $L79:
 	lw	$v1,96($fp)
 	li	$v0,2			# 0x2
 	bne	$v1,$v0,$L82
-	la	$t9,show_usage
+	la	$t9,mostrar_usage
 	jal	$ra,$t9
 	move	$a0,$zero
 	la	$t9,exit
 	jal	$ra,$t9
 $L82:
-	la	$t9,error_incorrect_parameters
+	la	$t9,error_parametros_incorrectos
 	jal	$ra,$t9
 $L81:
 	lw	$v1,28($fp)
@@ -820,13 +820,13 @@ $L81:
 	lw	$v1,96($fp)
 	li	$v0,2			# 0x2
 	bne	$v1,$v0,$L85
-	la	$t9,show_version
+	la	$t9,mostrar_version
 	jal	$ra,$t9
 	move	$a0,$zero
 	la	$t9,exit
 	jal	$ra,$t9
 $L85:
-	la	$t9,error_incorrect_parameters
+	la	$t9,error_parametros_incorrectos
 	jal	$ra,$t9
 $L84:
 	lw	$v0,36($fp)
@@ -835,7 +835,34 @@ $L84:
 	bne	$v0,$zero,$L89
 	b	$L88
 $L89:
+	lw	$v0,36($fp)
+	bne	$v0,$zero,$L90
+	lw	$v1,40($fp)
+	li	$v0,1			# 0x1
+	bne	$v1,$v0,$L90
+	lw	$a0,48($fp)
+	la	$a1,$LC27
+	la	$t9,strcmp
+	jal	$ra,$t9
+	bne	$v0,$zero,$L90
+	b	$L88
+$L90:
 	lw	$v1,36($fp)
+	li	$v0,1			# 0x1
+	bne	$v1,$v0,$L91
+	lw	$v0,40($fp)
+	bne	$v0,$zero,$L91
+	lw	$a0,44($fp)
+	la	$a1,$LC27
+	la	$t9,strcmp
+	jal	$ra,$t9
+	bne	$v0,$zero,$L91
+	b	$L88
+$L91:
+	lw	$v1,36($fp)
+	li	$v0,1			# 0x1
+	bne	$v1,$v0,$L87
+	lw	$v1,40($fp)
 	li	$v0,1			# 0x1
 	bne	$v1,$v0,$L87
 	lw	$a0,44($fp)
@@ -843,9 +870,6 @@ $L89:
 	la	$t9,strcmp
 	jal	$ra,$t9
 	bne	$v0,$zero,$L87
-	lw	$v1,40($fp)
-	li	$v0,1			# 0x1
-	bne	$v1,$v0,$L87
 	lw	$a0,48($fp)
 	la	$a1,$LC27
 	la	$t9,strcmp
@@ -853,89 +877,118 @@ $L89:
 	bne	$v0,$zero,$L87
 $L88:
 	sw	$zero,60($fp)
-	b	$L90
-$L87:
-	lw	$v1,36($fp)
-	li	$v0,1			# 0x1
-	bne	$v1,$v0,$L93
-	lw	$v0,40($fp)
-	bne	$v0,$zero,$L93
 	b	$L92
-$L93:
-	lw	$v1,36($fp)
-	li	$v0,1			# 0x1
-	bne	$v1,$v0,$L91
+$L87:
+	lw	$v0,36($fp)
+	bne	$v0,$zero,$L95
 	lw	$v1,40($fp)
 	li	$v0,1			# 0x1
-	bne	$v1,$v0,$L91
+	bne	$v1,$v0,$L95
 	lw	$a0,48($fp)
 	la	$a1,$LC27
 	la	$t9,strcmp
 	jal	$ra,$t9
-	bne	$v0,$zero,$L91
-$L92:
-	li	$v0,1			# 0x1
-	sw	$v0,60($fp)
-	b	$L90
-$L91:
-	lw	$v0,36($fp)
-	bne	$v0,$zero,$L97
-	lw	$v1,40($fp)
-	li	$v0,1			# 0x1
-	beq	$v1,$v0,$L96
-$L97:
+	bne	$v0,$zero,$L94
+$L95:
 	lw	$v1,36($fp)
 	li	$v0,1			# 0x1
-	bne	$v1,$v0,$L95
+	bne	$v1,$v0,$L93
+	lw	$v1,40($fp)
+	li	$v0,1			# 0x1
+	bne	$v1,$v0,$L93
 	lw	$a0,44($fp)
 	la	$a1,$LC27
 	la	$t9,strcmp
 	jal	$ra,$t9
-	bne	$v0,$zero,$L95
-	lw	$v1,40($fp)
-	li	$v0,1			# 0x1
-	beq	$v1,$v0,$L96
-	b	$L95
-$L96:
+	bne	$v0,$zero,$L93
+	lw	$a0,48($fp)
+	la	$a1,$LC27
+	la	$t9,strcmp
+	jal	$ra,$t9
+	bne	$v0,$zero,$L94
+	b	$L93
+$L94:
 	li	$v0,2			# 0x2
 	sw	$v0,60($fp)
-	b	$L90
-$L95:
+	b	$L92
+$L93:
 	lw	$v1,36($fp)
 	li	$v0,1			# 0x1
 	bne	$v1,$v0,$L99
+	lw	$v0,40($fp)
+	bne	$v0,$zero,$L99
+	lw	$a0,44($fp)
+	la	$a1,$LC27
+	la	$t9,strcmp
+	jal	$ra,$t9
+	bne	$v0,$zero,$L98
+$L99:
+	lw	$v1,36($fp)
+	li	$v0,1			# 0x1
+	bne	$v1,$v0,$L97
 	lw	$v1,40($fp)
 	li	$v0,1			# 0x1
-	bne	$v1,$v0,$L99
+	bne	$v1,$v0,$L97
+	lw	$a0,44($fp)
+	la	$a1,$LC27
+	la	$t9,strcmp
+	jal	$ra,$t9
+	beq	$v0,$zero,$L97
+	lw	$a0,48($fp)
+	la	$a1,$LC27
+	la	$t9,strcmp
+	jal	$ra,$t9
+	bne	$v0,$zero,$L97
+$L98:
+	li	$v0,1			# 0x1
+	sw	$v0,60($fp)
+	b	$L92
+$L97:
+	lw	$v1,36($fp)
+	li	$v0,1			# 0x1
+	bne	$v1,$v0,$L101
+	lw	$v1,40($fp)
+	li	$v0,1			# 0x1
+	bne	$v1,$v0,$L101
+	lw	$a0,44($fp)
+	la	$a1,$LC27
+	la	$t9,strcmp
+	jal	$ra,$t9
+	beq	$v0,$zero,$L101
+	lw	$a0,48($fp)
+	la	$a1,$LC27
+	la	$t9,strcmp
+	jal	$ra,$t9
+	beq	$v0,$zero,$L101
 	li	$v0,3			# 0x3
 	sw	$v0,60($fp)
-	b	$L90
-$L99:
-	la	$t9,error_incorrect_parameters
+	b	$L92
+$L101:
+	la	$t9,error_parametros_incorrectos
 	jal	$ra,$t9
-$L90:
+$L92:
 	lw	$v0,60($fp)
 	sw	$v0,68($fp)
 	li	$v0,1			# 0x1
 	lw	$v1,68($fp)
-	beq	$v1,$v0,$L103
+	beq	$v1,$v0,$L105
 	lw	$v1,68($fp)
 	sltu	$v0,$v1,1
-	bne	$v0,$zero,$L102
+	bne	$v0,$zero,$L104
 	li	$v0,2			# 0x2
 	lw	$v1,68($fp)
-	beq	$v1,$v0,$L105
+	beq	$v1,$v0,$L107
 	li	$v0,3			# 0x3
 	lw	$v1,68($fp)
-	beq	$v1,$v0,$L107
-	b	$L101
-$L102:
+	beq	$v1,$v0,$L109
+	b	$L103
+$L104:
 	la	$v0,__sF
 	sw	$v0,52($fp)
 	la	$v0,__sF+88
 	sw	$v0,56($fp)
-	b	$L101
-$L103:
+	b	$L103
+$L105:
 	lw	$a0,44($fp)
 	la	$a1,$LC28
 	la	$t9,fopen
@@ -944,7 +997,7 @@ $L103:
 	la	$v0,__sF+88
 	sw	$v0,56($fp)
 	lw	$v0,52($fp)
-	bne	$v0,$zero,$L101
+	bne	$v0,$zero,$L103
 	la	$a0,__sF+176
 	la	$a1,$LC29
 	la	$t9,fprintf
@@ -952,7 +1005,7 @@ $L103:
 	li	$v0,1			# 0x1
 	sw	$v0,64($fp)
 	b	$L58
-$L105:
+$L107:
 	la	$v0,__sF
 	sw	$v0,52($fp)
 	lw	$a0,48($fp)
@@ -961,7 +1014,7 @@ $L105:
 	jal	$ra,$t9
 	sw	$v0,56($fp)
 	lw	$v0,56($fp)
-	bne	$v0,$zero,$L101
+	bne	$v0,$zero,$L103
 	la	$a0,__sF+176
 	la	$a1,$LC29
 	la	$t9,fprintf
@@ -969,7 +1022,7 @@ $L105:
 	li	$v1,1			# 0x1
 	sw	$v1,64($fp)
 	b	$L58
-$L107:
+$L109:
 	lw	$a0,44($fp)
 	la	$a1,$LC28
 	la	$t9,fopen
@@ -981,22 +1034,22 @@ $L107:
 	jal	$ra,$t9
 	sw	$v0,56($fp)
 	lw	$v0,52($fp)
-	beq	$v0,$zero,$L109
+	beq	$v0,$zero,$L111
 	lw	$v0,56($fp)
-	bne	$v0,$zero,$L101
-$L109:
+	bne	$v0,$zero,$L103
+$L111:
 	lw	$v0,52($fp)
-	beq	$v0,$zero,$L110
+	beq	$v0,$zero,$L112
 	lw	$a0,52($fp)
 	la	$t9,fclose
 	jal	$ra,$t9
-$L110:
+$L112:
 	lw	$v0,56($fp)
-	beq	$v0,$zero,$L111
+	beq	$v0,$zero,$L113
 	lw	$a0,56($fp)
 	la	$t9,fclose
 	jal	$ra,$t9
-$L111:
+$L113:
 	la	$a0,__sF+176
 	la	$a1,$LC29
 	la	$t9,fprintf
@@ -1004,7 +1057,7 @@ $L111:
 	li	$v0,1			# 0x1
 	sw	$v0,64($fp)
 	b	$L58
-$L101:
+$L103:
 	lw	$a0,52($fp)
 	lw	$a1,56($fp)
 	la	$t9,procesar_archivo
@@ -1013,35 +1066,35 @@ $L101:
 	sw	$v1,72($fp)
 	li	$v0,1			# 0x1
 	lw	$v1,72($fp)
-	beq	$v1,$v0,$L116
+	beq	$v1,$v0,$L118
 	lw	$v1,72($fp)
 	sltu	$v0,$v1,1
-	bne	$v0,$zero,$L114
+	bne	$v0,$zero,$L116
 	li	$v0,2			# 0x2
 	lw	$v1,72($fp)
-	beq	$v1,$v0,$L117
+	beq	$v1,$v0,$L119
 	li	$v0,3			# 0x3
 	lw	$v1,72($fp)
-	beq	$v1,$v0,$L118
-	b	$L114
-$L116:
-	lw	$a0,52($fp)
-	la	$t9,fclose
-	jal	$ra,$t9
-	b	$L114
-$L117:
-	lw	$a0,56($fp)
-	la	$t9,fclose
-	jal	$ra,$t9
-	b	$L114
+	beq	$v1,$v0,$L120
+	b	$L116
 $L118:
 	lw	$a0,52($fp)
 	la	$t9,fclose
 	jal	$ra,$t9
+	b	$L116
+$L119:
 	lw	$a0,56($fp)
 	la	$t9,fclose
 	jal	$ra,$t9
-$L114:
+	b	$L116
+$L120:
+	lw	$a0,52($fp)
+	la	$t9,fclose
+	jal	$ra,$t9
+	lw	$a0,56($fp)
+	la	$t9,fclose
+	jal	$ra,$t9
+$L116:
 	sw	$zero,64($fp)
 $L58:
 	lw	$v0,64($fp)
